@@ -2,130 +2,99 @@ import java.util.*;
 import java.io.*;
 
 public class AlgoritmoGenetico {
-    static final int TAMANHO_POPULACAO = 100;
-    static final int NUMERO_GERACOES = 500;
+    static final int TAMANHO_POPULACAO = 60;
+    static final int NUMERO_GERACOES = 300;
     static final double TAXA_MUTACAO = 0.01;
+    static final int NUM_INDIVIDUOS_EXEMPLO = 10; // Número estratégico de indivíduos de exemplo
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.err.println("Uso: java AlgoritmoGenetico <arquivo>");
+            System.err.println("Uso: java AlgoritmoGenetico <arquivo_de_cidades>");
             System.exit(1);
         }
 
-        String nomeArquivo = args[0];
-        List<Cidade> cidades = lerCidadesDoArquivo(nomeArquivo);
+        String nomeArquivoCidades = args[0];
+        Cidade[] cidades = Utils.lerCidadesDoArquivo(nomeArquivoCidades);
 
-        List<Rota> populacao = new ArrayList<>();
-        for (int i = 0; i < TAMANHO_POPULACAO; i++) {
-            populacao.add(new Rota(cidades));
+        // Definindo alguns indivíduos de exemplo diretamente no código
+        double[][] individuosExemplo = gerarIndividuosExemplo(cidades.length);
+
+        int numIndividuosExemplo = individuosExemplo.length;
+
+        double[][] populacao = new double[TAMANHO_POPULACAO][cidades.length];
+        for (int i = 0; i < numIndividuosExemplo; i++) {
+            populacao[i] = individuosExemplo[i];
         }
 
-        Rota melhorRota = populacao.get(0);
+        // Completa a população inicial com indivíduos aleatórios se necessário
+        for (int i = numIndividuosExemplo; i < TAMANHO_POPULACAO; i++) {
+            populacao[i] = Utils.gerarRotaAleatoria(cidades.length);
+        }
+
+        double[] melhorRota = populacao[0];
+        double melhorDistancia = Utils.calcularDistanciaTotal(melhorRota, cidades);
+
+        System.out.println("Procurando uma nova distância...");
         for (int geracao = 0; geracao < NUMERO_GERACOES; geracao++) {
-            for (Rota rota : populacao) {
-                if (rota.distancia < melhorRota.distancia) {
-                    melhorRota = rota;
+            boolean encontrouMelhorDistancia = false;
+            for (double[] rota : populacao) {
+                double distancia = Utils.calcularDistanciaTotal(rota, cidades);
+                if (distancia < melhorDistancia) {
+                    melhorRota = rota.clone();
+                    melhorDistancia = distancia;
+                    encontrouMelhorDistancia = true;
                 }
             }
-            System.out.println("Geração " + geracao + " - Melhor distância: " + melhorRota.distancia);
 
-            List<Rota> novaPopulacao = new ArrayList<>();
-            for (int i = 0; i < TAMANHO_POPULACAO; i++) {
-                Rota pai1 = selecionarRota(populacao);
-                Rota pai2 = selecionarRota(populacao);
-                Rota filho = cruzarRotas(pai1, pai2);
-                if (Math.random() < TAXA_MUTACAO) {
-                    mutarRota(filho);
+            if (encontrouMelhorDistancia) {
+                System.out.println("Geração " + geracao + " - Melhor distância: " + melhorDistancia);
+                System.out.print("Caminho da menor rota: ");
+                for (double cidadeIndex : melhorRota) {
+                    Cidade cidade = cidades[(int) cidadeIndex];
+                    System.out.print(cidade.getNome() + " (" + cidade.getX() + ", " + cidade.getY() + ") -> ");
                 }
-                novaPopulacao.add(filho);
+                System.out.println();
+                System.out.println("Distância: " + melhorDistancia);
+                System.out.println("Procurando uma nova distância...");
+            }
+
+            double[][] novaPopulacao = new double[TAMANHO_POPULACAO][cidades.length];
+            for (int i = 0; i < TAMANHO_POPULACAO; i++) {
+                double[] pai1 = Utils.selecionarRota(populacao, cidades);
+                double[] pai2 = Utils.selecionarRota(populacao, cidades);
+                double[] filho = Utils.cruzarRotas(pai1, pai2);
+                if (Math.random() < TAXA_MUTACAO) {
+                    Utils.mutarRota(filho);
+                }
+                novaPopulacao[i] = filho;
             }
             populacao = novaPopulacao;
         }
 
-        System.out.println("Melhor rota encontrada: " + melhorRota.distancia);
-    }
-
-    static List<Cidade> lerCidadesDoArquivo(String nomeArquivo) {
-        List<Cidade> cidades = new ArrayList<>();
-        try (Scanner scanner = new Scanner(new File(nomeArquivo))) {
-            while (scanner.hasNextLine()) {
-                String[] partes = scanner.nextLine().split(" ");
-                double x = Double.parseDouble(partes[0]);
-                double y = Double.parseDouble(partes[1]);
-                String nome = partes[2];
-                cidades.add(new Cidade(x, y, nome));
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("Arquivo não encontrado: " + nomeArquivo);
-            System.exit(1);
+        // Imprime a melhor rota encontrada ao final da execução
+        System.out.println("Melhor rota encontrada: " + melhorDistancia);
+        System.out.print("Caminho da menor rota: ");
+        for (double cidadeIndex : melhorRota) {
+            Cidade cidade = cidades[(int) cidadeIndex];
+            System.out.print(cidade.getNome() + " (" + cidade.getX() + ", " + cidade.getY() + ") -> ");
         }
-        return cidades;
+        System.out.println();
+        System.out.println("Distância: " + melhorDistancia);
     }
 
-    static Rota selecionarRota(List<Rota> populacao) {
-        Collections.sort(populacao, Comparator.comparingDouble(rota -> rota.distancia));
-        double somaDistancias = populacao.stream().mapToDouble(rota -> rota.distancia).sum();
-        double valorSorteado = Math.random() * somaDistancias;
-        double acumulado = 0;
-        for (Rota rota : populacao) {
-            acumulado += rota.distancia;
-            if (acumulado >= valorSorteado) {
-                return rota;
+    // Função para gerar indivíduos de exemplo que cobrem todas as cidades
+    private static double[][] gerarIndividuosExemplo(int numCidades) {
+        double[][] individuosExemplo = new double[NUM_INDIVIDUOS_EXEMPLO][numCidades];
+        for (int i = 0; i < NUM_INDIVIDUOS_EXEMPLO; i++) {
+            List<Double> individuo = new ArrayList<>();
+            for (int j = 0; j < numCidades; j++) {
+                individuo.add((double) j);
+            }
+            Collections.shuffle(individuo);
+            for (int j = 0; j < numCidades; j++) {
+                individuosExemplo[i][j] = individuo.get(j);
             }
         }
-        return populacao.get(0);
-    }
-
-    static Rota cruzarRotas(Rota pai1, Rota pai2) {
-        List<Cidade> filhoCidades = new ArrayList<>(pai1.cidades);
-        int pontoCorte = new Random().nextInt(pai1.cidades.size());
-        for (int i = pontoCorte; i < pai1.cidades.size(); i++) {
-            filhoCidades.set(i, pai2.cidades.get(i));
-        }
-        return new Rota(filhoCidades);
-    }
-
-    static void mutarRota(Rota rota) {
-        int index1 = new Random().nextInt(rota.cidades.size());
-        int index2 = new Random().nextInt(rota.cidades.size());
-        Collections.swap(rota.cidades, index1, index2);
-        rota.distancia = rota.calcularDistanciaTotal();
-    }
-}
-
-class Cidade {
-    double x;
-    double y;
-    String nome;
-
-    public Cidade(double x, double y, String nome) {
-        this.x = x;
-        this.y = y;
-        this.nome = nome;
-    }
-}
-
-class Rota {
-    List<Cidade> cidades;
-    double distancia;
-
-    public Rota(List<Cidade> cidades) {
-        this.cidades = new ArrayList<>(cidades);
-        Collections.shuffle(this.cidades);
-        this.distancia = calcularDistanciaTotal();
-    }
-
-    double calcularDistanciaTotal() {
-        double distanciaTotal = 0;
-        for (int i = 0; i < cidades.size() - 1; i++) {
-            distanciaTotal += distanciaEntre(cidades.get(i), cidades.get(i + 1));
-        }
-        distanciaTotal += distanciaEntre(cidades.get(cidades.size() - 1), cidades.get(0)); // Volta para a cidade
-                                                                                           // inicial
-        return distanciaTotal;
-    }
-
-    double distanciaEntre(Cidade cidade1, Cidade cidade2) {
-        return Math.sqrt(Math.pow(cidade2.x - cidade1.x, 2) + Math.pow(cidade2.y - cidade1.y, 2));
+        return individuosExemplo;
     }
 }

@@ -1,13 +1,23 @@
 public class Cidade {
-    double latitude;
-    double longitude;
+    private double x;
+    private double y;
+    private String nome;
 
-    public Cidade(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public Cidade(double x, double y, String nome) {
+        this.x = x;
+        this.y = y;
+        this.nome = nome;
     }
 
-    public double distanciaParaOutraCidade(Cidade cidade) {
-        return Math.sqrt(Math.pow((latitude - cidade.latitude), 2) + Math.pow((longitude - cidade.longitude), 2));
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public String getNome() {
+        return nome;
     }
 }

@@ -1,6 +1,6 @@
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Rota {
     List<Cidade> cidades;
@@ -11,13 +11,17 @@ public class Rota {
         Collections.shuffle(this.cidades);
         this.distancia = calcularDistanciaTotal();
     }
-    
-    public double calcularDistanciaTotal() {
+
+    double calcularDistanciaTotal() {
         double distanciaTotal = 0;
         for (int i = 0; i < cidades.size() - 1; i++) {
-            distanciaTotal += cidades.get(i).distanciaParaOutraCidade(cidades.get(i + 1));
+            distanciaTotal += distanciaEntre(cidades.get(i), cidades.get(i + 1));
         }
-        distanciaTotal += cidades.get(cidades.size() - 1).distanciaParaOutraCidade(cidades.get(0)); // Volta para a cidade inicial
+        distanciaTotal += distanciaEntre(cidades.get(cidades.size() - 1), cidades.get(0));
         return distanciaTotal;
+    }
+
+    double distanciaEntre(Cidade cidade1, Cidade cidade2) {
+        return Math.sqrt(Math.pow(cidade2.getX() - cidade1.getX(), 2) + Math.pow(cidade2.getY() - cidade1.getY(), 2));
     }
 }
