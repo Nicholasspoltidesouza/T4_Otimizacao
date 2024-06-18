@@ -79,6 +79,15 @@ public class Utils {
         return filho;
     }
 
+    private static boolean contido(double[] array, double valor) {
+        for (double v : array) {
+            if (v == valor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void mutarRota(double[] rota) {
         int index1 = new Random().nextInt(rota.length);
         int index2 = new Random().nextInt(rota.length);

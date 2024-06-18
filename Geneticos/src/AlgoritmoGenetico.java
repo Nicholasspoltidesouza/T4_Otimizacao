@@ -2,10 +2,11 @@ import java.util.*;
 import java.io.*;
 
 public class AlgoritmoGenetico {
-    static final int TAMANHO_POPULACAO = 60;
-    static final int NUMERO_GERACOES = 300;
-    static final double TAXA_MUTACAO = 0.01;
-    static final int NUM_INDIVIDUOS_EXEMPLO = 10; // Número estratégico de indivíduos de exemplo
+    static final int TAMANHO_POPULACAO = 10;
+    static final int NUMERO_GERACOES = 50000;
+    static final double TAXA_MUTACAO = 0.1;
+    static final int NUM_INDIVIDUOS_EXEMPLO = 5; // Número estratégico de indivíduos de exemplo
+    static final double TAXA_ELITISMO = 0.1; // 10% da população
 
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -47,19 +48,26 @@ public class AlgoritmoGenetico {
             }
 
             if (encontrouMelhorDistancia) {
-                System.out.println("Geração " + geracao + " - Melhor distância: " + melhorDistancia);
-                System.out.print("Caminho da menor rota: ");
-                for (double cidadeIndex : melhorRota) {
-                    Cidade cidade = cidades[(int) cidadeIndex];
-                    System.out.print(cidade.getNome() + " (" + cidade.getX() + ", " + cidade.getY() + ") -> ");
-                }
+                // System.out.println("Geração " + geracao + " - Melhor distância: " + melhorDistancia);
+                // System.out.print("Caminho da menor rota: ");
+                // for (double cidadeIndex : melhorRota) {
+                //     Cidade cidade = cidades[(int) cidadeIndex];
+                //     System.out.print(cidade.getNome() + " (" + cidade.getX() + ", " + cidade.getY() + ") -> ");
+                // }
                 System.out.println();
                 System.out.println("Distância: " + melhorDistancia);
                 System.out.println("Procurando uma nova distância...");
             }
 
+            // Criação da nova população com elitismo
             double[][] novaPopulacao = new double[TAMANHO_POPULACAO][cidades.length];
-            for (int i = 0; i < TAMANHO_POPULACAO; i++) {
+            int numElitismo = (int) (TAMANHO_POPULACAO * TAXA_ELITISMO);
+            Arrays.sort(populacao, Comparator.comparingDouble(o -> Utils.calcularDistanciaTotal(o, cidades)));
+            for (int i = 0; i < numElitismo; i++) {
+                novaPopulacao[i] = populacao[i];
+            }
+
+            for (int i = numElitismo; i < TAMANHO_POPULACAO; i++) {
                 double[] pai1 = Utils.selecionarRota(populacao, cidades);
                 double[] pai2 = Utils.selecionarRota(populacao, cidades);
                 double[] filho = Utils.cruzarRotas(pai1, pai2);
