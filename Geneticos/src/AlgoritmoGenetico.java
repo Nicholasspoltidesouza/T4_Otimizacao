@@ -1,12 +1,11 @@
 import java.util.*;
-import java.io.*;
 
 public class AlgoritmoGenetico {
     static final int TAMANHO_POPULACAO = 10;
-    static final int NUMERO_GERACOES = 50000;
+    static final int NUMERO_GERACOES = 500000;
     static final double TAXA_MUTACAO = 0.1;
-    static final int NUM_INDIVIDUOS_EXEMPLO = 5; // Número estratégico de indivíduos de exemplo
-    static final double TAXA_ELITISMO = 0.1; // 10% da população
+    static final int NUM_INDIVIDUOS_EXEMPLO = 5;
+    static final double TAXA_ELITISMO = 0.1;
 
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -17,7 +16,6 @@ public class AlgoritmoGenetico {
         String nomeArquivoCidades = args[0];
         Cidade[] cidades = Utils.lerCidadesDoArquivo(nomeArquivoCidades);
 
-        // Definindo alguns indivíduos de exemplo diretamente no código
         double[][] individuosExemplo = gerarIndividuosExemplo(cidades.length);
 
         int numIndividuosExemplo = individuosExemplo.length;
@@ -26,8 +24,6 @@ public class AlgoritmoGenetico {
         for (int i = 0; i < numIndividuosExemplo; i++) {
             populacao[i] = individuosExemplo[i];
         }
-
-        // Completa a população inicial com indivíduos aleatórios se necessário
         for (int i = numIndividuosExemplo; i < TAMANHO_POPULACAO; i++) {
             populacao[i] = Utils.gerarRotaAleatoria(cidades.length);
         }
@@ -48,18 +44,12 @@ public class AlgoritmoGenetico {
             }
 
             if (encontrouMelhorDistancia) {
-                // System.out.println("Geração " + geracao + " - Melhor distância: " + melhorDistancia);
-                // System.out.print("Caminho da menor rota: ");
-                // for (double cidadeIndex : melhorRota) {
-                //     Cidade cidade = cidades[(int) cidadeIndex];
-                //     System.out.print(cidade.getNome() + " (" + cidade.getX() + ", " + cidade.getY() + ") -> ");
-                // }
+
                 System.out.println();
-                System.out.println("Distância: " + melhorDistancia);
+                System.out.println("Geracao: " + geracao + " Distância: " + melhorDistancia);
                 System.out.println("Procurando uma nova distância...");
             }
 
-            // Criação da nova população com elitismo
             double[][] novaPopulacao = new double[TAMANHO_POPULACAO][cidades.length];
             int numElitismo = (int) (TAMANHO_POPULACAO * TAXA_ELITISMO);
             Arrays.sort(populacao, Comparator.comparingDouble(o -> Utils.calcularDistanciaTotal(o, cidades)));
@@ -79,7 +69,6 @@ public class AlgoritmoGenetico {
             populacao = novaPopulacao;
         }
 
-        // Imprime a melhor rota encontrada ao final da execução
         System.out.println("Melhor rota encontrada: " + melhorDistancia);
         System.out.print("Caminho da menor rota: ");
         for (double cidadeIndex : melhorRota) {
@@ -90,7 +79,6 @@ public class AlgoritmoGenetico {
         System.out.println("Distância: " + melhorDistancia);
     }
 
-    // Função para gerar indivíduos de exemplo que cobrem todas as cidades
     private static double[][] gerarIndividuosExemplo(int numCidades) {
         double[][] individuosExemplo = new double[NUM_INDIVIDUOS_EXEMPLO][numCidades];
         for (int i = 0; i < NUM_INDIVIDUOS_EXEMPLO; i++) {

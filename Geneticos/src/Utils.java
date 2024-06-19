@@ -30,7 +30,6 @@ public class Utils {
         for (int i = 0; i < tamanho; i++) {
             rota[i] = i;
         }
-        // Embaralha a rota
         List<Double> rotaList = new ArrayList<>();
         for (double v : rota) {
             rotaList.add(v);
